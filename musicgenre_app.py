@@ -55,6 +55,6 @@ if uploaded_file is not None:
             result = genres[np.argmax(prediction)]
             
             st.success(f"예측 결과: **{result.upper()}**")
-            st.bar_chart(dict(zip(genres, prediction[0].tolist())))
+            st.bar_chart(dict(zip(genres, prediction[0])))
         except Exception as e:
             st.error(f"예측 중 오류 발생: {e}")
