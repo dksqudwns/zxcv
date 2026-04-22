@@ -1,50 +1,37 @@
-import streamlit as st
 import librosa
-import librosa.display
 import numpy as np
-import matplotlib.pyplot as plt
-import joblib  # 모델 로드용 (또는 keras.models.load_model)
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
-# 1. 모델 로드 (학습된 모델 파일이 필요합니다)
-# model = joblib.load('music_genre_model.pkl')
-genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 
-          'jazz', 'metal', 'pop', 'reggae', 'rock']
+# 학습 때 썼던 특징들 리스트 (본인의 데이터셋 구조에 맞게 수정)
+def extract_features(y, sr):
+    # 특징들을 리스트로 추출
+    chroma_stft = librosa.feature.chroma_stft(y=y, sr=sr)
+    rmse = librosa.feature.rms(y=y)
+    spec_cent = librosa.feature.spectral_centroid(y=y, sr=sr)
+    spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
+    rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+    zcr = librosa.feature.zero_crossing_rate(y)
+    mfcc = librosa.feature.mfcc(y=y, sr=sr)
+    
+    # 각 특징의 평균값 계산 (GTZAN CSV 구조와 일치해야 함)
+    feature_list = [
+        np.mean(chroma_stft), np.mean(rmse), np.mean(spec_cent), 
+        np.mean(spec_bw), np.mean(rolloff), np.mean(zcr)
+    ]
+    for e in mfcc:
+        feature_list.append(np.mean(e))
+        
+    return np.array(feature_list).reshape(1, -1)
 
-st.title("🎵 음악 장르 분류 AI 시연")
-st.write("분류하고 싶은 음악 파일(.wav)을 업로드하세요.")
-
-uploaded_file = st.file_uploader("파일 선택", type=["wav", "mp3"])
-
-if uploaded_file is not None:
-    # 오디오 로드
+# 시연 부분 코드
+if uploaded_file:
     y, sr = librosa.load(uploaded_file, duration=30)
-    st.audio(uploaded_file, format='audio/wav')
-
-    # 2. 특징 시각화 (시연의 재미 요소)
-    st.subheader("📊 오디오 특징 분석")
-    col1, col2 = st.columns(2)
+    features = extract_features(y, sr)
     
-    with col1:
-        st.write("Waveform")
-        fig, ax = plt.subplots()
-        librosa.display.waveshow(y, sr=sr, ax=ax)
-        st.pyplot(fig)
-
-    with col2:
-        st.write("MFCC (Mel-frequency cepstral coefficients)")
-        mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
-        fig, ax = plt.subplots()
-        img = librosa.display.specshow(mfccs, x_axis='time', ax=ax)
-        st.pyplot(fig)
-
-    # 3. 예측 수행 (프로젝트의 핵심 로직 연결)
-    # feature = extract_features(y, sr) # 기존에 만드신 특징 추출 함수
-    # prediction = model.predict(feature)
+    # [중요] 학습할 때 Scaler를 썼다면 여기서도 써야 합니다!
+    # scaler = joblib.load('scaler.pkl') # 만약 저장해둔 스케일러가 있다면
+    # features = scaler.transform(features)
     
-    st.subheader("🚀 장르 예측 결과")
-    # 예시 결과 (실제 모델 예측값으로 대체하세요)
-    mock_probs = [0.1, 0.05, 0.05, 0.7, 0.02, 0.01, 0.01, 0.03, 0.02, 0.01] 
-    predicted_genre = genres[np.argmax(mock_probs)]
-    
-    st.success(f"이 곡의 장르는 **{predicted_genre.upper()}**일 확률이 높습니다!")
-    st.bar_chart(dict(zip(genres, mock_probs)))
+    prediction = model.predict(features)
+    # ... 결과 출력
