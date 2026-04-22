@@ -47,14 +47,30 @@ if uploaded_file is not None:
         features = extract_features(y, sr)
         
         try:
-            # 학습 때 썼던 그 스케일러로 데이터를 보정해야 결과가 정확합니다.
+            # 1. 데이터를 보정하고 확률을 예측합니다.
             scaled_features = scaler.transform(features)
-            prediction = model.predict(scaled_features)
+            
+            # 중요! .predict() 대신 .predict_proba()를 사용해야 그래프가 예쁘게 나옵니다.
+            prediction_proba = model.predict_proba(scaled_features)[0]
             
             genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-            result = genres[np.argmax(prediction)]
             
+            # 가장 높은 확률을 가진 장르를 뽑습니다.
+            result = genres[np.argmax(prediction_proba)]
+            
+            # 2. 결과 출력
             st.success(f"예측 결과: **{result.upper()}**")
-            st.bar_chart(dict(zip(genres, prediction[0])))
+            
+            # 3. 그래프 깔끔하게 그리기
+            import pandas as pd
+            chart_data = pd.DataFrame({
+                'Genre': genres,
+                'Probability': prediction_proba
+            })
+            
+            # 확률이 높은 순서대로 정렬해서 가로로 보여줍니다.
+            chart_data = chart_data.sort_values(by='Probability', ascending=True)
+            st.bar_chart(chart_data.set_index('Genre'))
+
         except Exception as e:
             st.error(f"예측 중 오류 발생: {e}")
