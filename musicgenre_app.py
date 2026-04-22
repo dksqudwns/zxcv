@@ -13,7 +13,7 @@ genres = ['blues', 'classical', 'country', 'disco', 'hiphop',
 st.title("🎵 음악 장르 분류 AI 시연")
 st.write("분류하고 싶은 음악 파일(.wav)을 업로드하세요.")
 
-uploaded_file = st.file_uploader("파일 선택", type=["wav"])
+uploaded_file = st.file_uploader("파일 선택", type=["wav", "mp3"])
 
 if uploaded_file is not None:
     # 오디오 로드
