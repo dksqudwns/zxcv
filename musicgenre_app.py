@@ -5,7 +5,8 @@ import joblib
 import os
 
 # 1. 모델과 스케일러 파일이 있는지 확인 후 로드
-model_path = 'music_genre_model.pkl'
+# GitHub에 실제로 올린 파일 이름과 똑같이 맞춥니다.
+model_path = 'model.pkl'
 scaler_path = 'scaler.pkl'
 
 if os.path.exists(model_path) and os.path.exists(scaler_path):
